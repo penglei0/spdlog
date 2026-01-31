@@ -43,7 +43,13 @@
 #include <unistd.h>
 
 #ifdef __linux__
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE /* See feature_test_macros(7) */
+#endif
+#include <pthread.h>
 #include <sys/syscall.h>  //Use gettid() syscall under linux to get thread id
+#include <linux/prctl.h>  /* Definition of PR_* constants */
+#include <sys/prctl.h>
 
 #elif defined(_AIX)
 #include <pthread.h>  // for pthread_getthrds_np
@@ -328,6 +334,29 @@ SPDLOG_INLINE size_t thread_id() SPDLOG_NOEXCEPT {
 #else  // cache thread id in tls
     static thread_local const size_t tid = _thread_id();
     return tid;
+#endif
+}
+
+SPDLOG_INLINE std::string _thread_name() SPDLOG_NOEXCEPT {
+#ifdef __linux__
+    char name[16] = {0};
+    if (::prctl(PR_GET_NAME, name) == 0) {
+        return std::string(name);
+    } else {
+        pthread_getname_np(pthread_self(), name, sizeof(name));
+        return std::string(name);
+    }
+#else  // Default to thread id
+    return std::to_string(_thread_id());
+#endif
+}
+
+SPDLOG_INLINE const std::string &thread_name() SPDLOG_NOEXCEPT {
+#if defined(SPDLOG_NO_TLS)
+    return _thread_name();
+#else  // cache thread id in tls
+    static thread_local const std::string tname = _thread_name();
+    return tname;
 #endif
 }
 
