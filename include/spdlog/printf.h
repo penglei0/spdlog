@@ -10,6 +10,9 @@
 
 #include <array>
 #include <string_view> // C++17
+#include <spdlog/common.h>
+#include <spdlog/spdlog.h>
+#include <sstream>
 
 // Helper to identify format specifiers
 constexpr bool is_specifier(char c) {
@@ -107,6 +110,33 @@ static_assert(std::string_view(test_fmt7.data()) == "no specifier here: %q %z %y
 constexpr auto test_fmt8 = map_to_spdlog("nospace: %d%.2f%s");
 static_assert(std::string_view(test_fmt8.data()) == "nospace: {}{}{}");
 //  ================= static aassert test on map_to_spdlog end =================
+
+
+
+class SpdLogStream {
+public:
+    SpdLogStream(spdlog::level::level_enum level, const char *file, int line, const char *func)
+        : _level(level)
+        , _loc(file, line, func) {}
+    ~SpdLogStream() {
+        // Upon destruction (end of line), log the buffered message to spdlog
+        spdlog::default_logger_raw()->log(_loc, _level, "{}", _ss.str());
+    }
+    template <typename T>
+    SpdLogStream &operator<<(T &&data) {
+        _ss << std::forward<T>(data);
+        return *this;
+    }
+    SpdLogStream &operator<<(std::ostream &(*f)(std::ostream &)) {
+        f(_ss);
+        return *this;
+    }
+
+private:
+    spdlog::level::level_enum _level;
+    spdlog::source_loc _loc;
+    std::ostringstream _ss;
+};
 
 #define USE_SPDLOG_MACRO
 #ifdef USE_SPDLOG_MACRO
