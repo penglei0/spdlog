@@ -578,6 +578,20 @@ public:
     }
 };
 
+// Thread name
+template <typename ScopedPadder>
+class n_formatter : public flag_formatter {
+public:
+    explicit n_formatter(padding_info padinfo)
+        : flag_formatter(padinfo) {}
+    void format(const details::log_msg &msg, const std::tm &, memory_buf_t &dest) override {
+        const auto &thread_name = msg.thread_name;
+        const auto field_size = thread_name.size();
+        ScopedPadder p(field_size, padinfo_, dest);
+        fmt_helper::append_string_view(thread_name, dest);
+    }
+};
+
 // Current pid
 template <typename ScopedPadder>
 class pid_formatter final : public flag_formatter {
@@ -1051,6 +1065,10 @@ SPDLOG_INLINE void pattern_formatter::handle_flag_(char flag, details::padding_i
 
         case ('t'):  // thread id
             formatters_.push_back(details::make_unique<details::t_formatter<Padder>>(padding));
+            break;
+                
+        case ('N'):  // thread name
+            formatters_.push_back(details::make_unique<details::n_formatter<Padder>>(padding));
             break;
 
         case ('v'):  // the message text
