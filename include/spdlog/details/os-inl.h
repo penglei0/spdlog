@@ -351,7 +351,7 @@ SPDLOG_INLINE std::string _thread_name() SPDLOG_NOEXCEPT {
 #endif
 }
 
-SPDLOG_INLINE const std::string &thread_name() SPDLOG_NOEXCEPT {
+SPDLOG_INLINE std::string thread_name() SPDLOG_NOEXCEPT {
 #if defined(SPDLOG_NO_TLS)
     return _thread_name();
 #else  // cache thread id in tls

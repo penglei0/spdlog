@@ -74,7 +74,7 @@ SPDLOG_API size_t _thread_id() SPDLOG_NOEXCEPT;
 SPDLOG_API size_t thread_id() SPDLOG_NOEXCEPT;
 
 SPDLOG_API std::string _thread_name() SPDLOG_NOEXCEPT;
-SPDLOG_API const std::string &thread_name() SPDLOG_NOEXCEPT;
+SPDLOG_API std::string thread_name() SPDLOG_NOEXCEPT;
 
 // This is avoid msvc issue in sleep_for that happens if the clock changes.
 // See https://github.com/gabime/spdlog/issues/609
